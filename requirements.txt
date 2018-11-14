@@ -1,5 +1,8 @@
 pytest
 numpy
+requests
+flask
+pymodm
 pytest-cov
 pytest-pep8
 pytest-pudb
@@ -12,4 +15,3 @@ matplotlib
 scikit-image
 scikit-learn
 scipy
-peakutils
