@@ -12,10 +12,33 @@ logging.basicConfig(filename="HRMLogging.txt",
 app = Flask(__name__)
 
 
+required_keys_to_add = [
+    "patient_id",
+    "attending_email",
+    "user_age"
+]
+
+class ValidationError(Exception):
+    def __init__(self, message):
+        self.message = message
+
+
+def validate_new_patient(req):
+    for b in required_keys_to_add():
+        if b not in req.keys():
+            raise ValidationError("Missing a key")
+
+
 @app.route("/api/new_patient", methods=["POST"])
-def get_new_p():
+def add_new_p():
     connect("mongodb://bme590:hello12345@ds157818.mlab.com:57818/hr")
     a = request.get_json()
+
+    try:
+        validate_new_patient(a)
+    except ValidationError as inst:
+        return jsonify({"message": inst.message}), 500
+
     print(a)
 
     # validate
@@ -42,7 +65,6 @@ def add_HR():
     # need to throw an error if the id doesn't exist already
 
     user_id.update({"$push": {"heart_rate": a["heart_rate"]}})
-
 
     now = datetime.datetime.now()
 
