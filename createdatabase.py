@@ -1,7 +1,7 @@
 from pymodm import connect
 from pymodm import MongoModel, fields
 
-connect("mongodb://bme590:hello12345@ds037768.mlab.com:37768/bme590")
+connect("mongodb://bme590:hello12345@ds157818.mlab.com:57818/hr")
 
 # use list field
 class User(MongoModel):
@@ -13,17 +13,13 @@ class User(MongoModel):
     time_stamp = fields.DateTimeField()
 
 
-u = User(patient = "1", attending_email = "nkm12@duke.edu", age = "60")
+u = User(patient_id = "1", attending_email = "nkm12@duke.edu", age = "60")
 
 u.save()
 
-for user in User.objects.raw({}):
+for user in User.objects.raw({"age": 60}):
     print(u.attending_email)
     print(u.age)
-    del(u.attending_email)
-    del(u.age)
-    u.save()
-    print(User)
 
 
 
