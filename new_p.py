@@ -1,14 +1,15 @@
 from flask import Flask, jsonify, request
 from pymodm import connect
 from create_db import User
+import datetime
 
 app = Flask(__name__)
 
 
 @app.route("/api/new_patient", methods=["POST"])
 def get_new_p():
-    a = request.get_json()
     connect("mongodb://bme590:hello12345@ds157818.mlab.com:57818/hr")
+    a = request.get_json()
     print(a)
 
     # validate
@@ -28,13 +29,19 @@ def get_new_p():
 def add_HR():
     a = request.get_json()
     print(a)
-    patient = User(patient_id=a["patient_id"],
-                   attending_email=a["attending_email"],
-                   user_age=r["user_age"])
 
-    patient.save()
+    user_id = User.objects.raw({"_id": a["patient_id"]})
+
+#need to throw an error if the id doesn't exist already
+
+    user_id.update({"$push": {"heart_rate": a["heart_rate"]}})
+
+    now = datetime.datetime.now()
+
+    user_id.update({"$push": {"time_stamp": now}})
 
     result = {"message": "Successfully added heart rate data"}
+
 
     return jsonify(result)
 
