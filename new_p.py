@@ -32,7 +32,7 @@ def add_HR():
 
     user_id = User.objects.raw({"_id": a["patient_id"]})
 
-#need to throw an error if the id doesn't exist already
+    # need to throw an error if the id doesn't exist already
 
     user_id.update({"$push": {"heart_rate": a["heart_rate"]}})
 
@@ -41,7 +41,6 @@ def add_HR():
     user_id.update({"$push": {"time_stamp": now}})
 
     result = {"message": "Successfully added heart rate data"}
-
 
     return jsonify(result)
 
