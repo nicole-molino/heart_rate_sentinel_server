@@ -9,5 +9,5 @@ class User(MongoModel):
     patient_id = fields.IntegerField(primary_key=True)
     attending_email = fields.EmailField()
     user_age = fields.IntegerField()
-    heart_rate = fields.IntegerField()
-    time_stamp = fields.DateTimeField()
+    heart_rate = fields.ListField(field=fields.BigIntegerField())
+    time_stamp = fields.ListField(field=fields.DateTimeField())
