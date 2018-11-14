@@ -2,6 +2,12 @@ from flask import Flask, jsonify, request
 from pymodm import connect
 from create_db import User
 import datetime
+import logging
+
+logging.basicConfig(filename="HRMLogging.txt",
+                    format='%(asctime)s %(message)s',
+                    datefmt='%m/%d/%Y %I:%M:%S %p',
+                    level=logging.DEBUG)
 
 app = Flask(__name__)
 
@@ -19,6 +25,7 @@ def get_new_p():
                    user_age=a["user_age"])
 
     patient.save()
+    logging.info("Added a new patient, %s", a["patient_id"])
 
     result = {"message": "Successfully added new patient"}
 
@@ -36,9 +43,12 @@ def add_HR():
 
     user_id.update({"$push": {"heart_rate": a["heart_rate"]}})
 
+
     now = datetime.datetime.now()
 
     user_id.update({"$push": {"time_stamp": now}})
+
+    logging.info("Added HR (%s BPM), patient: %s,  time: %s", a["heart_rate"], a["patient_id"], now)
 
     result = {"message": "Successfully added heart rate data"}
 
