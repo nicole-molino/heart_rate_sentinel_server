@@ -11,5 +11,3 @@ class User(MongoModel):
     user_age = fields.IntegerField()
     heart_rate = fields.ListField(field=fields.BigIntegerField())
     time_stamp = fields.ListField(field=fields.DateTimeField())
-
-
