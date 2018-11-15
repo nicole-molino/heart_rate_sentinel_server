@@ -1,4 +1,4 @@
-from builtins import int, type
+from builtins import int, type, float
 from statistics import mean
 from flask import Flask, jsonify, request
 from pymodm import connect
@@ -32,8 +32,8 @@ class ValidationError(Exception):
 
 
 def validate_new_patient(req):
-    for b in required_keys_to_add():
-        if b not in req.keys():
+    for key in required_keys_to_add():
+        if key not in req.keys():
             raise ValidationError("Missing a key")
 
 
@@ -42,18 +42,18 @@ def add_new_p():
     connect("mongodb://bme590:hello12345@ds157818.mlab.com:57818/hr")
     a = request.get_json()
 
-    try:
-        validate_new_patient(a)
-    except ValidationError as inst:
-        return jsonify({"message": inst.message}), 500
+    #try:
+    #    validate_new_patient(a)
+    #except ValidationError as inst:
+     #   return jsonify({"message": inst.message})
 
     print(a)
 
-    # validate
 
     patient = User(patient_id=a["patient_id"],
                    attending_email=a["attending_email"],
                    user_age=a["user_age"])
+
 
     patient.save()
 
@@ -84,18 +84,19 @@ def add_HR():
 
     result = {"message": "Successfully added heart rate data"}
 
-    HR = int(a["heart_rate"])
+    #HR = float(a["heart_rate"])
 
-    for user in User.objects.raw({"_id": a["patient_id"]}):
-        age = int(user.user_age)
+    #for user in User.objects.raw({"_id": a["patient_id"]}):
+    #    age = int(user.user_age)
+    #    return age
+        #try:
+        #    answer = determine_if_tachy(age, HR)
+        #    if answer:
+        #        send_email()
+        #except UnboundLocalError:
+        #    raise ValidationError("User does not exist")
+        #    logging.warning("Tried to access user that does not exist")
 
-    try:
-        answer = determine_if_tachy(age, HR)
-        if answer:
-            send_email()
-    except UnboundLocalError:
-        raise ValidationError("User does not exist")
-        logging.warning("Tried to access user that does not exist")
 
     return jsonify(result)
 
@@ -157,7 +158,7 @@ def determine_tachy(patient_id):
                 return jsonify("User exists"
                                " but no heart rate, can't determine")
 
-        age = int(user.user_age)
+        age = float(user.user_age)
         HR = int(user.heart_rate[-1])
         time = user.time_stamp[-1]
         answer = determine_if_tachy(age, HR)
