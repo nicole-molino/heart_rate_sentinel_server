@@ -57,8 +57,6 @@ def add_new_p():
 
     patient.save()
 
-
-
     logging.info("Added a new patient, %s", a["patient_id"])
 
     result = {"message": "Successfully added new patient"}
@@ -83,7 +81,6 @@ def add_HR():
 
     logging.info("Added HR (%s BPM), patient: %s,"
                  "  time: %s", a["heart_rate"], a["patient_id"], now)
-
 
     result = {"message": "Successfully added heart rate data"}
 
@@ -115,20 +112,14 @@ def get_heart_rate(patient_id):
                 validate_get_heart_rate(user.heart_rate)
                 logging.info("Add heart rate data %s", user.heart_rate)
 
-
             except ValidationError:
                 return jsonify("User exists but no heart rate data")
 
         return jsonify(user.heart_rate)
 
-
     except UnboundLocalError:
         raise ValidationError("User does not exist")
         logging.warning("Tried to access user that does not exist")
-
-
-
-
 
 
 @app.route("/api/heart_rate/average/<patient_id>", methods=["GET"])
@@ -173,12 +164,11 @@ def determine_tachy(patient_id):
 
         if answer:
             send_email()
-            ans_str= 'Tachycardic'
+            ans_str = 'Tachycardic'
         else:
-             ans_str= 'Not tachycardic'
+            ans_str = 'Not tachycardic'
 
-        return jsonify(ans_str,time)
-
+        return jsonify(ans_str, time)
 
     except UnboundLocalError:
         raise \
