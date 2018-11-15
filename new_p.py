@@ -1,5 +1,5 @@
 from builtins import int
-
+from statistics import mean
 from flask import Flask, jsonify, request
 from pymodm import connect
 from create_db import User
@@ -97,6 +97,26 @@ def get_heart_rate(patient_id):
                 return jsonify("User exists but no heart rate data")
 
         return jsonify(user.heart_rate)
+    except UnboundLocalError:
+        raise ValidationError("User does not exist")
+        logging.warning("Tried to access user that does not exist")
+
+@app.route("/api/heart_rate/average/<patient_id>",methods=["GET"])
+def calculate_avg_HR(patient_id):
+    connect("mongodb://bme590:hello12345@ds157818.mlab.com:57818/hr")
+
+    a = int(patient_id)
+
+    try:
+        for user in User.objects.raw({"_id": a}):
+            try:
+                validate_get_heart_rate(user.heart_rate)
+                logging.info("Average heart rate data")
+            except ValidationError:
+                return jsonify("User exists but no heart rate data")
+
+        ave = mean(user.heart_rate)
+        return jsonify(ave)
     except UnboundLocalError:
         raise ValidationError("User does not exist")
         logging.warning("Tried to access user that does not exist")
