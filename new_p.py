@@ -1,10 +1,14 @@
+from builtins import int
+
 from flask import Flask, jsonify, request
 from pymodm import connect
 from create_db import User
 import datetime
 import logging
+from validate_get_heart_rate import validate_get_heart_rate, ValidationError
+#from validate_patient_id import validate_patient_id
 
-logging.basicConfig(filename="HRMLogging.txt",
+logging.basicConfig(filename="HR_sent_Logging.txt",
                     format='%(asctime)s %(message)s',
                     datefmt='%m/%d/%Y %I:%M:%S %p',
                     level=logging.DEBUG)
@@ -52,8 +56,28 @@ def add_HR():
 
     result = {"message": "Successfully added heart rate data"}
 
+
     return jsonify(result)
 
+
+@app.route("/api/heart_rate/<patient_id>", methods=["GET"])
+def get_heart_rate(patient_id):
+    connect("mongodb://bme590:hello12345@ds157818.mlab.com:57818/hr")
+
+    a = int(patient_id)
+
+    try:
+        for user in User.objects.raw({"_id": a}):
+            try:
+                validate_get_heart_rate(user.heart_rate)
+                logging.info("Add heart rate data %s", user.heart_rate)
+            except ValidationError:
+                return jsonify("User exists but no heart rate data")
+
+        return jsonify(user.heart_rate)
+    except UnboundLocalError:
+        raise ValidationError("User does not exist")
+        logging.warning("Tried to access user that does not exist")
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1")
