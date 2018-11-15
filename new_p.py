@@ -42,18 +42,16 @@ def add_new_p():
     connect("mongodb://bme590:hello12345@ds157818.mlab.com:57818/hr")
     a = request.get_json()
 
-    #try:
+    # try:
     #    validate_new_patient(a)
-    #except ValidationError as inst:
-     #   return jsonify({"message": inst.message})
+    # except ValidationError as inst:
+    #   return jsonify({"message": inst.message})
 
     print(a)
-
 
     patient = User(patient_id=a["patient_id"],
                    attending_email=a["attending_email"],
                    user_age=a["user_age"])
-
 
     patient.save()
 
@@ -84,19 +82,18 @@ def add_HR():
 
     result = {"message": "Successfully added heart rate data"}
 
-    #HR = float(a["heart_rate"])
+    # HR = float(a["heart_rate"])
 
-    #for user in User.objects.raw({"_id": a["patient_id"]}):
+    # for user in User.objects.raw({"_id": a["patient_id"]}):
     #    age = int(user.user_age)
     #    return age
-        #try:
-        #    answer = determine_if_tachy(age, HR)
-        #    if answer:
-        #        send_email()
-        #except UnboundLocalError:
-        #    raise ValidationError("User does not exist")
-        #    logging.warning("Tried to access user that does not exist")
-
+    # try:
+    #    answer = determine_if_tachy(age, HR)
+    #    if answer:
+    #        send_email()
+    # except UnboundLocalError:
+    #    raise ValidationError("User does not exist")
+    #    logging.warning("Tried to access user that does not exist")
 
     return jsonify(result)
 
