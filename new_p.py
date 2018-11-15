@@ -5,8 +5,11 @@ from pymodm import connect
 from create_db import User
 import datetime
 import logging
+
+from determine_if_tachy import determine_if_tachy
 from validate_get_heart_rate import validate_get_heart_rate, ValidationError
-#from validate_patient_id import validate_patient_id
+
+# from validate_patient_id import validate_patient_id
 
 logging.basicConfig(filename="HR_sent_Logging.txt",
                     format='%(asctime)s %(message)s',
@@ -15,12 +18,12 @@ logging.basicConfig(filename="HR_sent_Logging.txt",
 
 app = Flask(__name__)
 
-
 required_keys_to_add = [
     "patient_id",
     "attending_email",
     "user_age"
 ]
+
 
 class ValidationError(Exception):
     def __init__(self, message):
@@ -74,10 +77,10 @@ def add_HR():
 
     user_id.update({"$push": {"time_stamp": now}})
 
-    logging.info("Added HR (%s BPM), patient: %s,  time: %s", a["heart_rate"], a["patient_id"], now)
+    logging.info("Added HR (%s BPM), patient: %s,"
+                 "  time: %s", a["heart_rate"], a["patient_id"], now)
 
     result = {"message": "Successfully added heart rate data"}
-
 
     return jsonify(result)
 
@@ -101,7 +104,8 @@ def get_heart_rate(patient_id):
         raise ValidationError("User does not exist")
         logging.warning("Tried to access user that does not exist")
 
-@app.route("/api/heart_rate/average/<patient_id>",methods=["GET"])
+
+@app.route("/api/heart_rate/average/<patient_id>", methods=["GET"])
 def calculate_avg_HR(patient_id):
     connect("mongodb://bme590:hello12345@ds157818.mlab.com:57818/hr")
 
@@ -120,6 +124,34 @@ def calculate_avg_HR(patient_id):
     except UnboundLocalError:
         raise ValidationError("User does not exist")
         logging.warning("Tried to access user that does not exist")
+
+
+@app.route("/api/heart_rate/average/<patient_id>", methods=["GET"])
+def calculate_avg_HR(patient_id):
+    connect("mongodb://bme590:hello12345@ds157818.mlab.com:57818/hr")
+
+    a = int(patient_id)
+
+    try:
+        for user in User.objectd({"_id": a}):
+            try:
+                validate_get_heart_rate(user.heart_rate)
+            except ValidationError:
+                return jsonify("User exists"
+                               " but no heart rate, can't determine")
+
+        age = int(user.user_age)
+        HR = int(user.heart_rate[-1])
+        answer = determine_if_tachy(age, HR)
+        return jsonify(answer)
+
+    except UnboundLocalError:
+        raise \
+            ValidationError("User does "
+                            "not exist")
+        logging.wrarning("Tried to test if "
+                         "tachycardia for user that does not exist")
+
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1")

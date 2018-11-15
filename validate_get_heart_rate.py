@@ -6,4 +6,3 @@ class ValidationError(Exception):
 def validate_get_heart_rate(HR):
     if len(HR) == 0:
         raise ValidationError("No heart rate data")
-
