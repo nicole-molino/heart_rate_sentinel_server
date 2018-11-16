@@ -22,11 +22,11 @@ def determine_if_tachy(age, HR):
 
     if age >= (1 / 12) and age < (3 / 12):
         if HR > 179:
-            a=1
+            a = 1
 
     if age >= (3 / 12) and age <= (6 / 12):
         if HR > 186:
-            a =1
+            a = 1
 
     if age >= (6 / 12) and age < 1:
         if HR > 169:

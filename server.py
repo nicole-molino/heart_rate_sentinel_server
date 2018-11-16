@@ -9,7 +9,7 @@ from determine_if_tachy import determine_if_tachy
 from send_grid import send_email
 from validate_get_heart_rate import validate_get_heart_rate, ValidationError
 from validate_new_patient import check_if_new
-
+from statistics import StatisticsError
 
 # from validate_patient_id import validate_patient_id
 
@@ -19,7 +19,6 @@ logging.basicConfig(filename="HR_sent_Logging.txt",
                     level=logging.DEBUG)
 
 app = Flask(__name__)
-
 
 REQ_KEYS = [
     "patient_id",
@@ -138,9 +137,11 @@ def add_HR():
         logging.warning("Provided wrong keys")
         raise ValidationError("Provide keys: ID and HR only")
 
-    user_id.update({"$push": {"time_stamp": datetime.datetime.now()}})
+    now = datetime.datetime.now()
+    user_id.update({"$push": {"time_stamp": now}})
     logging.info("Added HR (%s BPM), patient: %s,"
-                 "  time: %s", a["heart_rate"], a["patient_id"], datetime.datetime.now())
+                 "  time: %s", a["heart_rate"], a["patient_id"],
+                 now)
     result = {"message": "Successfully added heart rate data"}
 
     # send email if tachycardic
@@ -217,19 +218,24 @@ def calculate_avg_HR(patient_id):
                 validate_get_heart_rate(user.heart_rate)
                 logging.info("Average heart rate data")
             except ValidationError:
-                return jsonify("User exists but no heart rate data")
+                pass
+                mes = jsonify("User exists but no heart rate data")
 
         ave = mean(user.heart_rate)
-        return jsonify(ave)
+        mes = jsonify(ave)
     except UnboundLocalError:
-        raise ValidationError("User does not exist")
+        mes = "User does not exist"
+        # raise ValidationError("User does not exist")
         logging.warning("Tried to access user that does not exist")
+
+    return mes
 
 
 @app.route("/api/heart_rate/status/<patient_id>", methods=["GET"])
 def determine_tachy(patient_id):
     """
-    Return if patient is tachy from most recent measurement and time stamp, send email if tachy
+    Return if patient is tachy from most
+    recent measurement and time stamp, send email if tachy
 
     Args:
         patient_id (str):
@@ -253,9 +259,10 @@ def determine_tachy(patient_id):
                 pass
 
         time = user.time_stamp[-1]
-        answer = determine_if_tachy(float(user.user_age), int(user.heart_rate[-1]))
+        answer = determine_if_tachy(float(user.user_age),
+                                    int(user.heart_rate[-1]))
 
-        #send email if tahycardic
+        # send email if tahycardic
         if answer:
             logging.warning("User is tachycardic")
             send_email()
@@ -265,14 +272,15 @@ def determine_tachy(patient_id):
             ans_str = 'Not tachycardic'
             logging.info("User is not tachycardic")
 
-        return jsonify(ans_str, time)
+        mes = jsonify(ans_str, time)
 
     except UnboundLocalError:
-        raise \
-            ValidationError("User does "
-                            "not exist")
+        mes = "User does not exist"
+        mes = jsonify(mes)
         logging.warning("Tried to test if "
                         "tachycardia for user that does not exist")
+
+    return mes
 
 
 @app.route("/api/heart_rate/interval_average", methods=["POST"])
@@ -287,21 +295,45 @@ def calc_int_avg():
     connect("mongodb://bme590:hello12345@ds157818.mlab.com:57818/hr")
 
     r = request.get_json()
-    time_requested = datetime.datetime. \
-        strptime(r["heart_rate_average_since"], "%Y-%m-%d %H:%M:%S.%f")
 
+    # check if user exists
+
+    my_id = r["patient_id"]
+    all_id = []
+    all_pat = User.objects.raw({})
+
+    for user in all_pat:
+        all_id.append(user.patient_id)
+
+    # check if patient exists
+    try:
+        b = check_if_new(all_id, my_id)
+        if b == 1:
+            raise ValidationError("Patient doesn't exist")
+    except ValueError:
+        pass
+
+    time_requested = \
+        datetime.datetime.strptime(r["heart_rate_average_since"],
+                                   "%Y-%m-%d %H:%M:%S.%f")
+
+    # pidstr = r["patient_id"]
+    # pi = int(pidstr)
     pat = User.objects.raw({"_id": r["patient_id"]}).first()
     alltime = pat.time_stamp
     allHR = pat.heart_rate
     HRint = []
 
     for item in alltime:
-
         if item > time_requested:
             index = alltime.index(item)
             HRint.append(allHR[index])
-    int_avg = mean(HRint)
-    return jsonify(int_avg)
+    try:
+        int_avg = mean(HRint)
+        mes = jsonify(int_avg)
+    except StatisticsError:
+        mes = "No HR data for patient"
+    return mes
 
 
 if __name__ == "__main__":
