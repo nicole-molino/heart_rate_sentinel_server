@@ -172,8 +172,29 @@ def determine_tachy(patient_id):
         raise \
             ValidationError("User does "
                             "not exist")
-        logging.wrarning("Tried to test if "
-                         "tachycardia for user that does not exist")
+        logging.warning("Tried to test if "
+                        "tachycardia for user that does not exist")
+
+
+@app.route("/api/heart_rate/interval_average", methods=["POST"])
+def calc_int_avg():
+    connect("mongodb://bme590:hello12345@ds157818.mlab.com:57818/hr")
+
+    r = request.get_json()
+    time_requested = datetime.datetime.\
+        strptime(r["heart_rate_average_since"], "%Y-%m-%d %H:%M:%S.%f")
+
+    pat = User.objects.raw({"_id": r["patient_id"]}).first()
+    alltime = pat.time_stamp
+    allHR = pat.heart_rate
+    HRint = []
+
+    for item in alltime:
+        if item > time_requested:
+            index = alltime.index(item)
+            HRint.append(allHR[index])
+    int_avg = mean(HRint)
+    return jsonify(int_avg)
 
 
 if __name__ == "__main__":
