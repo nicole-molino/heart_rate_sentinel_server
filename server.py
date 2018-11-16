@@ -296,6 +296,7 @@ def calc_int_avg():
     HRint = []
 
     for item in alltime:
+
         if item > time_requested:
             index = alltime.index(item)
             HRint.append(allHR[index])
@@ -304,4 +305,4 @@ def calc_int_avg():
 
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1")
+    app.run(host="0.0.0.0")
