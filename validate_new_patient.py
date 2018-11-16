@@ -13,6 +13,18 @@ class ValidationError(Exception):
 
 
 def check_if_new(all_id, my_id):
+    """Check if patient exists
+
+        Args:
+            all_id (list): integers of current ids in db
+            my_id (int): id of current patient
+
+        Returns:
+            b (int): value of 1 if new patient
+
+        Raises:
+            ValueError: if patient id already exists
+    """
     b = 1
     for item in all_id:
         if item == my_id:
@@ -21,4 +33,4 @@ def check_if_new(all_id, my_id):
             raise ValueError("Patient already exists")
 
     if b == 1:
-        return 1
+        return b

@@ -34,6 +34,15 @@ class ValidationError(Exception):
 
 
 def validate_new_patient(req):
+    """
+     Determine if correct keys given when making new patient
+
+     Args:
+         a (json) : keys input by user
+
+     Raises:
+         Validation Error: If missing key
+    """
 
     for key in REQ_KEYS():
         if key not in req.keys():
@@ -45,7 +54,13 @@ def validate_new_patient(req):
 def add_new_p():
     """Add new patient to data base
 
-    Args: key: patient_id, age, email
+    Args:
+        patient_id (key): numerical id of patient
+        user_age (key) : age of patient
+        attending_email (key) : patient email
+
+    Returns:
+        result: prints if patient was saved
 
     Returns: if patient added to database """
     connect("mongodb://bme590:hello12345@ds157818.mlab.com:57818/hr")
@@ -81,6 +96,21 @@ def add_new_p():
 
 @app.route("/api/heart_rate", methods=["POST"])
 def add_HR():
+    """
+    Store HR data with time stamp and sends email if tachycardic
+
+    Args:
+        patient_id (key): id of patient
+        heart_rate (key): HR data want to enter
+
+    Returns:
+        result (string): says data was added
+
+    Raises:
+        ValidationError: Wrong keys given
+        ValidationError: Patient doesn't exist
+
+    """
     a = request.get_json()
 
     # validate correct keys
@@ -108,10 +138,9 @@ def add_HR():
         logging.warning("Provided wrong keys")
         raise ValidationError("Provide keys: ID and HR only")
 
-    now = datetime.datetime.now()
-    user_id.update({"$push": {"time_stamp": now}})
+    user_id.update({"$push": {"time_stamp": datetime.datetime.now()}})
     logging.info("Added HR (%s BPM), patient: %s,"
-                 "  time: %s", a["heart_rate"], a["patient_id"], now)
+                 "  time: %s", a["heart_rate"], a["patient_id"], datetime.datetime.now())
     result = {"message": "Successfully added heart rate data"}
 
     # send email if tachycardic
@@ -131,6 +160,19 @@ def add_HR():
 
 @app.route("/api/heart_rate/<patient_id>", methods=["GET"])
 def get_heart_rate(patient_id):
+    """
+    Return all previous HR data
+
+    Args:
+        patient_id: ID of patient you want data for
+
+    Returns:
+        HRdata (json): json of all HR data
+
+    Raises:
+        ValidationError: User doesn't exist
+        ValidationError: No HR data for user
+    """
     connect("mongodb://bme590:hello12345@ds157818.mlab.com:57818/hr")
 
     a = int(patient_id)
@@ -153,6 +195,18 @@ def get_heart_rate(patient_id):
 
 @app.route("/api/heart_rate/average/<patient_id>", methods=["GET"])
 def calculate_avg_HR(patient_id):
+    """
+    Average of HR data for all measurements
+
+    Args:
+        patient_id (int): id of specified patient
+
+    Returns:
+        ave (json): json with value of average HR
+
+    Raises:
+        ValidationError: user doesn't exist
+    """
     connect("mongodb://bme590:hello12345@ds157818.mlab.com:57818/hr")
 
     a = int(patient_id)
@@ -174,6 +228,19 @@ def calculate_avg_HR(patient_id):
 
 @app.route("/api/heart_rate/status/<patient_id>", methods=["GET"])
 def determine_tachy(patient_id):
+    """
+    Return if patient is tachy from most recent measurement and time stamp, send email if tachy
+
+    Args:
+        patient_id (str):
+
+    Returns:
+        ans_str (str):  if tachy or not
+        time (str): time stamp
+
+    Raises:
+        ValidationError: User doesn't exist
+    """
     connect("mongodb://bme590:hello12345@ds157818.mlab.com:57818/hr")
 
     a = int(patient_id)
@@ -185,11 +252,10 @@ def determine_tachy(patient_id):
             except ValidationError:
                 pass
 
-        age = float(user.user_age)
-        HR = int(user.heart_rate[-1])
         time = user.time_stamp[-1]
-        answer = determine_if_tachy(age, HR)
+        answer = determine_if_tachy(float(user.user_age), int(user.heart_rate[-1]))
 
+        #send email if tahycardic
         if answer:
             logging.warning("User is tachycardic")
             send_email()
@@ -211,6 +277,13 @@ def determine_tachy(patient_id):
 
 @app.route("/api/heart_rate/interval_average", methods=["POST"])
 def calc_int_avg():
+    """
+    Calculate average HR over an interval
+
+    Returns:
+        int_avg (json) : average over the interval
+
+    """
     connect("mongodb://bme590:hello12345@ds157818.mlab.com:57818/hr")
 
     r = request.get_json()
