@@ -88,8 +88,8 @@ def add_HR():
         all_id.append(user.patient_id)
 
     try:
-        a = check_if_new(all_id, my_id)
-        if a == 1:
+        aa = check_if_new(all_id, my_id)
+        if aa == 1:
             raise ValidationError("Patient doesn't exist")
             logging.error("Tried to add HR to non-existent patient")
     except ValueError:
@@ -109,20 +109,17 @@ def add_HR():
                  "  time: %s", a["heart_rate"], a["patient_id"], now)
     result = {"message": "Successfully added heart rate data"}
 
-    # HR = float(a["heart_rate"])
-
     # send email if tachycardic
 
-    # for user in User.objects.raw({"_id": a["patient_id"]}):
-    #    age = int(user.user_age)
-    #    return age
-    # try:
-    #    answer = determine_if_tachy(age, HR)
-    #    if answer:
-    #        send_email()
-    # except UnboundLocalError:
-    #    raise ValidationError("User does not exist")
-    #    logging.warning("Tried to access user that does not exist")
+    HR = float(a["heart_rate"])
+    age = User.objects.raw({"_id": a["patient_id"]}).first().user_age
+
+    try:
+        if determine_if_tachy(age, HR):
+            send_email()
+            logging.info("Patient %s is tachycardic, HR: %s", my_id, HR)
+    except UnboundLocalError:
+        raise ValidationError("User does not exist")
 
     return jsonify(result)
 
