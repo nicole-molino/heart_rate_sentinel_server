@@ -135,6 +135,7 @@ def get_heart_rate(patient_id):
 
             except ValidationError:
                 return jsonify("User exists but no heart rate data")
+                logging.warning("Tried to access HR but none")
 
         return jsonify(user.heart_rate)
 
