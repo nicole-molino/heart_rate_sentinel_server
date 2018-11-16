@@ -43,6 +43,11 @@ def validate_new_patient(req):
 
 @app.route("/api/new_patient", methods=["POST"])
 def add_new_p():
+    """Add new patient to data base
+
+    Args: key: patient_id, age, email
+
+    Returns: if patient added to database """
     connect("mongodb://bme590:hello12345@ds157818.mlab.com:57818/hr")
     a = request.get_json()
 
