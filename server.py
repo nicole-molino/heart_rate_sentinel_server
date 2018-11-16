@@ -5,7 +5,7 @@ from pymodm import connect
 from create_db import User
 import datetime
 import logging
-from validate_new_patient import  check_if_new
+from validate_new_patient import check_if_new
 
 from determine_if_tachy import determine_if_tachy
 from send_grid import send_email
@@ -20,23 +20,24 @@ logging.basicConfig(filename="HR_sent_Logging.txt",
 
 app = Flask(__name__)
 
-
-
-
 REQ_KEYS = [
     "patient_id",
     "attending_email",
     "user_age"
-    ]
+]
+
 
 class ValidationError(Exception):
     def __init__(self, message):
         self.message = message
 
+
 def validate_new_patient(req):
     for key in REQ_KEYS():
         if key not in req.keys():
-            raise ValidationError("Key '{0}' not present in request".format(key))
+            raise ValidationError("Key '{0}' "
+                                  "not present in request".format(key))
+
 
 @app.route("/api/new_patient", methods=["POST"])
 def add_new_p():
@@ -52,9 +53,9 @@ def add_new_p():
     check_if_new(all_id, my_id)
 
     # validate correct keys
-    #try:
+    # try:
     #    validate_new_patient(a)
-    #except ValidationError as inst:
+    # except ValidationError as inst:
     #    return jsonify({"message": inst.message}),500
 
     patient = User(patient_id=a["patient_id"],
@@ -100,7 +101,6 @@ def add_HR():
     except UnboundLocalError:
         raise ValidationError("User does not exist")
         logging.warning("Tried to access user that does not exist")
-
 
     return jsonify(result)
 

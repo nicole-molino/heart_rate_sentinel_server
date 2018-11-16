@@ -7,23 +7,18 @@ logging.basicConfig(filename="HR_sent_Logging.txt",
                     level=logging.DEBUG)
 
 
-
 class ValidationError(Exception):
     def __init__(self, message):
         self.message = message
 
 
-def check_if_new(all_id,my_id):
-    b=1
+def check_if_new(all_id, my_id):
+    b = 1
     for item in all_id:
         if item == my_id:
             logging.warning("ALREADY EXISTS")
-            b=3
+            b = 3
             raise ValueError("Patient already exists")
 
-    if b==1:
+    if b == 1:
         return 1
-
-
-
-
