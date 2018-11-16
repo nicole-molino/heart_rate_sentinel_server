@@ -5,11 +5,11 @@ from pymodm import connect
 from create_db import User
 import datetime
 import logging
-
 from determine_if_tachy import determine_if_tachy
 from send_grid import send_email
 from validate_get_heart_rate import validate_get_heart_rate, ValidationError
 from validate_new_patient import check_if_new
+
 
 # from validate_patient_id import validate_patient_id
 
@@ -20,7 +20,8 @@ logging.basicConfig(filename="HR_sent_Logging.txt",
 
 app = Flask(__name__)
 
-required_keys_to_add = [
+
+REQ_KEYS = [
     "patient_id",
     "attending_email",
     "user_age"
@@ -33,9 +34,11 @@ class ValidationError(Exception):
 
 
 def validate_new_patient(req):
-    for key in required_keys_to_add():
+
+    for key in REQ_KEYS():
         if key not in req.keys():
-            raise ValidationError("Missing a key")
+            raise ValidationError("Key '{0}' "
+                                  "not present in request".format(key))
 
 
 @app.route("/api/new_patient", methods=["POST"])
@@ -43,10 +46,20 @@ def add_new_p():
     connect("mongodb://bme590:hello12345@ds157818.mlab.com:57818/hr")
     a = request.get_json()
 
+    my_id = a["patient_id"]
+    all_id = []
+    all_pat = User.objects.raw({})
+    for user in all_pat:
+        all_id.append(user.patient_id)
+
+    # check if patient exists
+    check_if_new(all_id, my_id)
+
+    # validate correct keys
     # try:
     #    validate_new_patient(a)
     # except ValidationError as inst:
-    #   return jsonify({"message": inst.message})
+    #    return jsonify({"message": inst.message}),500
 
     patient = User(patient_id=a["patient_id"],
                    attending_email=a["attending_email"],
