@@ -1,15 +1,15 @@
-from builtins import int, type, float
+from builtins import int, type, float, ValueError, KeyError
 from statistics import mean
 from flask import Flask, jsonify, request
 from pymodm import connect
 from create_db import User
 import datetime
 import logging
-from validate_new_patient import check_if_new
-
 from determine_if_tachy import determine_if_tachy
 from send_grid import send_email
 from validate_get_heart_rate import validate_get_heart_rate, ValidationError
+from validate_new_patient import check_if_new
+
 
 # from validate_patient_id import validate_patient_id
 
@@ -19,6 +19,7 @@ logging.basicConfig(filename="HR_sent_Logging.txt",
                     level=logging.DEBUG)
 
 app = Flask(__name__)
+
 
 REQ_KEYS = [
     "patient_id",
@@ -33,6 +34,7 @@ class ValidationError(Exception):
 
 
 def validate_new_patient(req):
+
     for key in REQ_KEYS():
         if key not in req.keys():
             raise ValidationError("Key '{0}' "
@@ -43,6 +45,7 @@ def validate_new_patient(req):
 def add_new_p():
     connect("mongodb://bme590:hello12345@ds157818.mlab.com:57818/hr")
     a = request.get_json()
+
     my_id = a["patient_id"]
     all_id = []
     all_pat = User.objects.raw({})
@@ -65,42 +68,61 @@ def add_new_p():
     patient.save()
 
     logging.info("Added a new patient, %s", a["patient_id"])
+
     result = {"message": "Successfully added new patient"}
+
     return jsonify(result)
 
 
 @app.route("/api/heart_rate", methods=["POST"])
 def add_HR():
     a = request.get_json()
-    print(a)
 
+    # validate correct keys
+
+    # check if patient exists
+    my_id = a["patient_id"]
+    all_id = []
+    all_pat = User.objects.raw({})
+    for user in all_pat:
+        all_id.append(user.patient_id)
+
+    try:
+        a = check_if_new(all_id, my_id)
+        if a == 1:
+            raise ValidationError("Patient doesn't exist")
+            logging.error("Tried to add HR to non-existent patient")
+    except ValueError:
+        pass
+
+    # add the heart rate data
     user_id = User.objects.raw({"_id": a["patient_id"]})
-
-    # need to throw an error if the id doesn't exist already
-
-    user_id.update({"$push": {"heart_rate": a["heart_rate"]}})
+    try:
+        user_id.update({"$push": {"heart_rate": a["heart_rate"]}})
+    except KeyError:
+        logging.warning("Provided wrong keys")
+        raise ValidationError("Provide keys: ID and HR only")
 
     now = datetime.datetime.now()
-
     user_id.update({"$push": {"time_stamp": now}})
-
     logging.info("Added HR (%s BPM), patient: %s,"
                  "  time: %s", a["heart_rate"], a["patient_id"], now)
-
     result = {"message": "Successfully added heart rate data"}
 
-    HR = float(a["heart_rate"])
+    # HR = float(a["heart_rate"])
 
-    for user in User.objects.raw({"_id": a["patient_id"]}):
-        age = int(user.user_age)
-        return age
-    try:
-        answer = determine_if_tachy(age, HR)
-        if answer:
-            send_email()
-    except UnboundLocalError:
-        raise ValidationError("User does not exist")
-        logging.warning("Tried to access user that does not exist")
+    # send email if tachycardic
+
+    # for user in User.objects.raw({"_id": a["patient_id"]}):
+    #    age = int(user.user_age)
+    #    return age
+    # try:
+    #    answer = determine_if_tachy(age, HR)
+    #    if answer:
+    #        send_email()
+    # except UnboundLocalError:
+    #    raise ValidationError("User does not exist")
+    #    logging.warning("Tried to access user that does not exist")
 
     return jsonify(result)
 
