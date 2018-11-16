@@ -178,8 +178,7 @@ def determine_tachy(patient_id):
             try:
                 validate_get_heart_rate(user.heart_rate)
             except ValidationError:
-                return jsonify("User exists"
-                               " but no heart rate, can't determine")
+                pass
 
         age = float(user.user_age)
         HR = int(user.heart_rate[-1])
@@ -187,10 +186,13 @@ def determine_tachy(patient_id):
         answer = determine_if_tachy(age, HR)
 
         if answer:
+            logging.warning("User is tachycardic")
             send_email()
             ans_str = 'Tachycardic'
+
         else:
             ans_str = 'Not tachycardic'
+            logging.info("User is not tachycardic")
 
         return jsonify(ans_str, time)
 
